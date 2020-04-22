@@ -78,13 +78,8 @@ class Prompter:
 
         width = prompter.tk.winfo_screenwidth()
         height = prompter.tk.winfo_screenheight()
-<<<<<<< HEAD
-        x = int(width/2 - prompter.tk.winfo_reqwidth())
-        y = int(height/2 - prompter.tk.winfo_reqheight())
-=======
         x = int(width/2 - (prompter.tk.winfo_reqwidth()))
         y = int(height/2 - (prompter.tk.winfo_reqheight()))
->>>>>>> 601219db0f1154428fd26d2347416a6e110b2e85
         prompter.tk.geometry("+%d+%d" % (x, y))
         prompter.tk.geometry(f"+{x}+{y}")
         return True
@@ -106,10 +101,6 @@ class Prompter:
             except:
                 pass
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 601219db0f1154428fd26d2347416a6e110b2e85
     @staticmethod
     def Prompt(*fields, title="Input"):
         ''' Basic mission statement completed. '''
