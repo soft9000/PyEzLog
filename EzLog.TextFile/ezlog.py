@@ -11,6 +11,102 @@ import os.path
 from datetime import datetime as zdatetime
 from email import utils
 
+
+from tkinter import *
+class Prompter:
+    def __init__(self):
+        self._dict = None
+        self._isOk = None
+        self.last_row = None
+
+    def _okay(self):
+        self._isOk = True
+        self.tk.quit()
+
+    def _cancel(self):
+        self._isOk = False
+        self.tk.quit()
+
+    @staticmethod
+    def Begin(*fields, title="Input"):
+        ''' Create the frame, add the title, as well as the input fields.'''
+        from collections import OrderedDict
+        self = Prompter()
+        self.tk = Tk()
+
+        self._dict = OrderedDict()
+
+        if title:
+            self.tk.title(title)
+
+        self.last_row = 0
+        # zFields (A Label, plus an Entry, in a grid layout)
+        for ref in fields:
+            obj = Label(master=self.tk, text=str(ref) + ": " )
+            obj.grid(row=self.last_row, column=0)
+
+            obj = Entry(master=self.tk, bd=5, width=72)
+            obj.grid(row=self.last_row, sticky=W, column=1)
+
+            if not self.last_row:
+                obj.focus()
+
+            self._dict[ref]=obj
+            self.last_row += 1
+        return self
+
+    @staticmethod
+    def End(prompter):
+        ''' Add the closing buttons, center, and pack the Frame.'''
+        if prompter.last_row is None:
+            return False
+        if isinstance(prompter, Prompter) is False:
+            return False
+
+        # zButtons (A Frame in the grid, plus the properly-centered pair of buttons)
+        bottom = Frame(prompter.tk)
+        bottom.grid(row=prompter.last_row, columnspan=2)
+        btn = Button(bottom, text="Okay", command=prompter._okay)
+        btn.pack(side=LEFT, pady=12)
+
+        btn = Button(bottom, text="Cancel", command=prompter._cancel)
+        btn.pack(side=RIGHT, padx=10)
+
+        width = prompter.tk.winfo_screenwidth()
+        height = prompter.tk.winfo_screenheight()
+        x = int(width/2 - (prompter.tk.winfo_reqwidth()))
+        y = int(height/2 - (prompter.tk.winfo_reqheight()))
+        prompter.tk.geometry("+%d+%d" % (x, y))
+        prompter.tk.geometry(f"+{x}+{y}")
+        return True
+
+    def show(self):
+        from collections import OrderedDict
+        self.tk.mainloop()
+        try:
+            results = OrderedDict()
+            if self._isOk is not True:
+                return results
+
+            for ref in self._dict.keys():
+                results[ref] = (self._dict[ref]).get()
+            return results
+        finally:
+            try:
+                self.tk.destroy()
+            except:
+                pass
+
+
+    @staticmethod
+    def Prompt(*fields, title="Input"):
+        ''' Basic mission statement completed. '''
+        self = Prompter.Begin(*fields, title=title)
+        if Prompter.End(self) is False:
+            raise Exception("AddButtons: Unexpected Error.")
+        return self.show()
+
+
 class EzLog():
 
     RunDone = None
@@ -147,6 +243,19 @@ class EzLog():
                     print(f"{ss}.) {line}", end='')
         EzLog.RunDone = "Search"
 
+    @staticmethod
+    def Show():
+        entry = EzLog()
+        results = Prompter.Prompt("Message", title=entry.local_date)
+        if len(results) is 0:
+            print("Canceled - Not logged.")
+        else:
+            entry.message = results["Message"]
+            with open(EzLog.LOGFILE, "a") as fp:
+                fp.write(str(entry))
+            print(entry)
+        EzLog.RunDone = "Show"
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -171,7 +280,7 @@ if __name__ == '__main__':
                         help="search log entries")
     parser.parse_args()
     if not EzLog.RunDone:
-        parser.print_help()
+        EzLog.Show()
     else:
         print(f"EzLog: {EzLog.RunDone} Completed.")
 
